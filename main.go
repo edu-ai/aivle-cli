@@ -1,6 +1,8 @@
 package main
 
 import (
+	"aivle-cli/models"
+	"aivle-cli/operations"
 	"encoding/json"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
@@ -9,6 +11,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+)
+
+const (
+	OperationPrintToken          = "print token"
+	OperationDownloadSubmissions = "download submissions"
 )
 
 // the questions to ask
@@ -27,7 +34,7 @@ var qs = []*survey.Question{
 		Name: "operation",
 		Prompt: &survey.Select{
 			Message: "Choose an operation:",
-			Options: []string{"print token", "download submissions"},
+			Options: []string{OperationPrintToken, OperationDownloadSubmissions},
 			Default: "print token",
 		},
 	},
@@ -66,11 +73,8 @@ func main() {
 		fmt.Printf("Unable to login with status code %d\n", resp.StatusCode)
 		return
 	}
-	type TokenResponse struct {
-		UserId int    `json:"user"`
-		Token  string `json:"key"`
-	}
-	tokenResponse := TokenResponse{}
+
+	tokenResponse := models.TokenResponse{}
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&tokenResponse)
 	if err != nil {
@@ -79,9 +83,9 @@ func main() {
 	}
 
 	// handle operations
-	if answers.Operation == "print token" {
+	if answers.Operation == OperationPrintToken {
 		fmt.Println(tokenResponse.Token)
-	} else if answers.Operation == "download submissions" {
-		fmt.Println("Feature not prepared yet!")
+	} else if answers.Operation == OperationDownloadSubmissions {
+		operations.DownloadSubmissions(apiRoot, tokenResponse.Token)
 	}
 }
