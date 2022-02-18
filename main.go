@@ -14,12 +14,13 @@ import (
 )
 
 const (
+	OperationExit                = "exit"
 	OperationPrintToken          = "print token"
 	OperationDownloadSubmissions = "download submissions"
 )
 
 // the questions to ask
-var qs = []*survey.Question{
+var loginQuestions = []*survey.Question{
 	{
 		Name:     "username",
 		Prompt:   &survey.Input{Message: "What is your aiVLE username?"},
@@ -30,14 +31,6 @@ var qs = []*survey.Question{
 		Prompt:   &survey.Password{Message: "Password:"},
 		Validate: survey.Required,
 	},
-	{
-		Name: "operation",
-		Prompt: &survey.Select{
-			Message: "Choose an operation:",
-			Options: []string{OperationPrintToken, OperationDownloadSubmissions},
-			Default: "print token",
-		},
-	},
 }
 
 func main() {
@@ -46,15 +39,14 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	apiRoot := os.Getenv("API_ROOT")
-	// the answers will be written to this struct
-	answers := struct {
-		Username  string `survey:"username"`
-		Password  string `survey:"password"`
-		Operation string `survey:"operation"`
+	// the loginAnswers will be written to this struct
+	loginAnswers := struct {
+		Username string `survey:"username"`
+		Password string `survey:"password"`
 	}{}
 
 	// perform the questions
-	err = survey.Ask(qs, &answers)
+	err = survey.Ask(loginQuestions, &loginAnswers)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -62,8 +54,8 @@ func main() {
 
 	// try getting the token
 	resp, err := http.PostForm(apiRoot+"/dj-rest-auth/login/", url.Values{
-		"username": {answers.Username},
-		"password": {answers.Password},
+		"username": {loginAnswers.Username},
+		"password": {loginAnswers.Password},
 	})
 	if err != nil {
 		fmt.Println(err.Error())
@@ -82,10 +74,24 @@ func main() {
 		return
 	}
 
-	// handle operations
-	if answers.Operation == OperationPrintToken {
-		fmt.Println(tokenResponse.Token)
-	} else if answers.Operation == OperationDownloadSubmissions {
-		operations.DownloadSubmissions(apiRoot, tokenResponse.Token)
+	for {
+		// handle operations
+		operation := ""
+		err = survey.AskOne(&survey.Select{
+			Message: "Choose an operation:",
+			Options: []string{OperationExit, OperationPrintToken, OperationDownloadSubmissions},
+			Default: "print token",
+		}, &operation)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		if operation == OperationExit {
+			break
+		} else if operation == OperationPrintToken {
+			fmt.Println(tokenResponse.Token)
+		} else if operation == OperationDownloadSubmissions {
+			operations.DownloadSubmissions(apiRoot, tokenResponse.Token)
+		}
 	}
 }
