@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"aivle-cli/models"
 	"encoding/json"
 	"github.com/AlecAivazis/survey/v2"
 	"io"
@@ -15,16 +14,7 @@ import (
 func DownloadSubmissions(apiRoot string, token string) {
 	client := &http.Client{}
 	// get list of tasks
-	req, err := apiGetRequest(apiRoot, token, "/api/v1/tasks/")
-	if err != nil {
-		panic(err)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	var tasks []models.Task
-	err = json.NewDecoder(resp.Body).Decode(&tasks)
+	tasks, err := getTasks(client, apiRoot, token)
 	if err != nil {
 		panic(err)
 	}
@@ -42,24 +32,7 @@ func DownloadSubmissions(apiRoot string, token string) {
 	markedForGrading := true
 	err = survey.AskOne(&survey.Confirm{Message: "Download marked-for-grading submissions only? (default Yes)", Default: true}, &markedForGrading)
 	// get submissions in the selected task
-	req, err = apiGetRequest(apiRoot, token, "/api/v1/submissions/")
-	if err != nil {
-		panic(err)
-	}
-	q := req.URL.Query()
-	q.Add("task", strconv.Itoa(selectedTask.Id))
-	if markedForGrading {
-		q.Add("marked_for_grading", "true")
-	} else {
-		q.Add("marked_for_grading", "false")
-	}
-	req.URL.RawQuery = q.Encode()
-	resp, err = client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	var submissions []models.Submission
-	err = json.NewDecoder(resp.Body).Decode(&submissions)
+	submissions, err := getSubmissionsByTask(client, apiRoot, token, selectedTask.Id, markedForGrading)
 	if err != nil {
 		panic(err)
 	}
@@ -79,11 +52,11 @@ func DownloadSubmissions(apiRoot string, token string) {
 		if err != nil {
 			panic(err)
 		}
-		req, err = apiGetRequest(apiRoot, token, "/api/v1/submissions/"+strconv.Itoa(submission.Id)+"/download/")
+		req, err := apiGetRequest(apiRoot, token, "/api/v1/submissions/"+strconv.Itoa(submission.Id)+"/download/")
 		if err != nil {
 			panic(err)
 		}
-		resp, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			panic(err)
 		}
