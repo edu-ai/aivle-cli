@@ -3,7 +3,6 @@ package operations
 import (
 	"aivle-cli/models"
 	"encoding/json"
-	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"io"
 	"io/ioutil"
@@ -40,7 +39,8 @@ func DownloadSubmissions(apiRoot string, token string) {
 		panic(err)
 	}
 	selectedTask := tasks[taskName]
-	fmt.Printf("Selected task ID %d\n", selectedTask.Id)
+	markedForGrading := true
+	err = survey.AskOne(&survey.Confirm{Message: "Download marked-for-grading submissions only? (default Yes)", Default: true}, &markedForGrading)
 	// get submissions in the selected task
 	req, err = apiGetRequest(apiRoot, token, "/api/v1/submissions/")
 	if err != nil {
@@ -48,7 +48,11 @@ func DownloadSubmissions(apiRoot string, token string) {
 	}
 	q := req.URL.Query()
 	q.Add("task", strconv.Itoa(selectedTask.Id))
-	q.Add("marked_for_grading", "true")
+	if markedForGrading {
+		q.Add("marked_for_grading", "true")
+	} else {
+		q.Add("marked_for_grading", "false")
+	}
 	req.URL.RawQuery = q.Encode()
 	resp, err = client.Do(req)
 	if err != nil {
