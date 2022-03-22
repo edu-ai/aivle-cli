@@ -37,14 +37,22 @@ func DownloadResults(apiRoot string, token string) {
 	defer f.Close()
 	w := csv.NewWriter(f)
 	err = w.Write([]string{
-		"user_id", "point", "notes", "created_at",
+		"user_id", "username", "point", "notes", "created_at",
 	})
 	if err != nil {
 		panic(err)
 	}
+	participants, err := getParticipantsByCourse(client, apiRoot, token, selectedTask.CourseId)
+	if err != nil {
+		panic(err)
+	}
+	m := make(map[int]string)
+	for _, participant := range participants {
+		m[participant.User.Id] = participant.User.Username
+	}
 	for _, submission := range submissions {
 		err = w.Write([]string{
-			strconv.Itoa(submission.UserId), submission.Point, submission.Notes, submission.CreatedAt,
+			strconv.Itoa(submission.UserId), m[submission.UserId], submission.Point, submission.Notes, submission.CreatedAt,
 		})
 		if err != nil {
 			panic(err)

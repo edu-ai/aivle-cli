@@ -3,6 +3,7 @@ package operations
 import (
 	"aivle-cli/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -47,5 +48,18 @@ func getSubmissionsByTask(client *http.Client, apiRoot string, token string, tas
 		return
 	}
 	err = json.NewDecoder(resp.Body).Decode(&submissions)
+	return
+}
+
+func getParticipantsByCourse(client *http.Client, apiRoot string, token string, courseId int) (participants []models.Participation, err error) {
+	req, err := apiGetRequest(apiRoot, token, fmt.Sprintf("/api/v1/courses/%d/get_participants/", courseId))
+	if err != nil {
+		return
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	err = json.NewDecoder(resp.Body).Decode(&participants)
 	return
 }

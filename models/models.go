@@ -20,3 +20,13 @@ type Submission struct {
 	CreatedAt        string `json:"created_at"`
 	MarkedForGrading bool   `json:"marked_for_grading"`
 }
+
+type User struct {
+	Id       int    `json:"id"`
+	Username string `json:"username"`
+}
+
+type Participation struct {
+	User User   `json:"user"`
+	Role string `json:"role"`
+}
