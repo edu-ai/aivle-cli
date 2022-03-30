@@ -30,3 +30,17 @@ type Participation struct {
 	User User   `json:"user"`
 	Role string `json:"role"`
 }
+
+type Course struct {
+	Id            int    `json:"id"`
+	Code          string `json:"code"`
+	AcademicYear  string `json:"academic_year"`
+	Semester      int    `json:"semester"`
+	Visible       bool   `json:"visible"`
+	Participation struct {
+		ParticipationId int    `json:"id"`
+		Role            string `json:"role"`
+		UserId          int    `json:"user"`
+		CourseId        int    `json:"course"`
+	} `json:"participation"`
+}

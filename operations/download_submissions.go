@@ -13,22 +13,11 @@ import (
 
 func DownloadSubmissions(apiRoot string, token string) {
 	client := &http.Client{}
-	// get list of tasks
-	tasks, err := getTasks(client, apiRoot, token)
-	if err != nil {
-		panic(err)
-	}
 	// select one of the tasks
-	var taskNames []string
-	for _, task := range tasks {
-		taskNames = append(taskNames, task.Name)
-	}
-	taskName := 0
-	err = survey.AskOne(&survey.Select{Message: "Please select a task:", Options: taskNames}, &taskName)
+	selectedTask, err := selectOneTask(client, apiRoot, token)
 	if err != nil {
 		panic(err)
 	}
-	selectedTask := tasks[taskName]
 	markedForGrading := true
 	err = survey.AskOne(&survey.Confirm{Message: "Download marked-for-grading submissions only? (default Yes)", Default: true}, &markedForGrading)
 	// get submissions in the selected task

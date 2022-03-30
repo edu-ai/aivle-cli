@@ -18,6 +18,7 @@ const (
 	OperationPrintToken          = "print token"
 	OperationDownloadSubmissions = "download submissions"
 	OperationDownloadResults     = "download results"
+	OperationUploadWhitelist     = "upload whitelist"
 )
 
 // the questions to ask
@@ -80,7 +81,7 @@ func main() {
 		operation := ""
 		err = survey.AskOne(&survey.Select{
 			Message: "Choose an operation:",
-			Options: []string{OperationExit, OperationPrintToken, OperationDownloadSubmissions, OperationDownloadResults},
+			Options: []string{OperationExit, OperationDownloadSubmissions, OperationDownloadResults, OperationUploadWhitelist, OperationPrintToken},
 			Default: "print token",
 		}, &operation)
 		if err != nil {
@@ -95,6 +96,8 @@ func main() {
 			operations.DownloadSubmissions(apiRoot, tokenResponse.Token)
 		} else if operation == OperationDownloadResults {
 			operations.DownloadResults(apiRoot, tokenResponse.Token)
+		} else if operation == OperationUploadWhitelist {
+			operations.UploadWhitelist(apiRoot, tokenResponse.Token)
 		}
 	}
 }

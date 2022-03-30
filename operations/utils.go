@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 func apiGetRequest(apiRoot string, token string, api string) (*http.Request, error) {
@@ -13,6 +15,16 @@ func apiGetRequest(apiRoot string, token string, api string) (*http.Request, err
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", "Token "+token)
+	return req, nil
+}
+
+func apiPostRequest(apiRoot string, token string, api string, formData *url.Values) (*http.Request, error) {
+	req, err := http.NewRequest("POST", apiRoot+api, strings.NewReader(formData.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", "Token "+token)
 	return req, nil
 }
@@ -26,6 +38,7 @@ func getTasks(client *http.Client, apiRoot string, token string) (tasks []models
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&tasks)
 	return
 }
@@ -47,6 +60,7 @@ func getSubmissionsByTask(client *http.Client, apiRoot string, token string, tas
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&submissions)
 	return
 }
@@ -60,6 +74,35 @@ func getParticipantsByCourse(client *http.Client, apiRoot string, token string, 
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&participants)
 	return
+}
+
+func addWhitelist(client *http.Client, apiRoot string, token string, courseId int, email string) (err error) {
+	req, err := apiPostRequest(apiRoot, token, "/api/v1/whitelist/",
+		&url.Values{"course": {strconv.Itoa(courseId)}, "email": {email}})
+	if err != nil {
+		return
+	}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	return
+}
+
+func getCourses(client *http.Client, apiRoot string, token string) (courses []models.Course, err error) {
+	// TODO: support pagination
+	req, err := apiGetRequest(apiRoot, token, "/api/v1/courses/")
+	if err != nil {
+		panic(err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	var results struct {
+		Results []models.Course `json:"results"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&results)
+	return results.Results, err
 }
