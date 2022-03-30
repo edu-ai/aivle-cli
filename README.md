@@ -17,3 +17,9 @@ API_ROOT=http://192.168.3.51:8000
 2. Download evaluation results as CSV file
 3. Upload LumiNUS student roster Excel to aiVLE course whitelist
 4. Get API token from username and password
+
+## Note
+
+To export student roster from LumiNUS, please use the following config:
+![You should only include email and select "No Photos" for the "Photo Size".](.\images\luminus_export_example.png 
+"LumiNUS student roster export configuration")
